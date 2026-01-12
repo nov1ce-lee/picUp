@@ -50,6 +50,10 @@
     "directories": {
       "output": "release/${version}"
     },
+    "files": [
+      "dist",
+      "dist-electron"
+    ],
     "win": {
       "icon": "public/logo.svg",
       "target": [
