@@ -23,6 +23,7 @@
     "react-dom": "^18.2.0",
     "react-i18next": "^16.5.2",
     "react-router-dom": "^7.12.0",
+    "sharp": "^0.34.5",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
@@ -55,7 +56,7 @@
       "dist-electron"
     ],
     "win": {
-      "icon": "public/logo.svg",
+      "icon": "public/logo.png",
       "target": [
         "nsis",
         "portable"
