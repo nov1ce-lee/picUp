@@ -1,10 +1,10 @@
-name: Build
+name: Build and Release
 
 on:
   push:
     branches: [ main, master ]
     tags:
-      - 'v*'
+      - 'v*'  # 推送 v 开头的标签时触发
   workflow_dispatch:
 
 jobs:
@@ -35,10 +35,16 @@ jobs:
           name: PicUp-Windows
           path: release/**/*.exe
 
-      - name: Release
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')  # 仅在有标签时创建 Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/v')
         with:
-          files: release/**/*.exe
+          files: |
+            release/*.exe
+            release/*.yml
+            release/*.blockmap
+          generate_release_notes: true  # 自动生成更新日志
+          draft: false  # 直接发布，不保存为草稿
+          prerelease: false  # 正式版本
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
