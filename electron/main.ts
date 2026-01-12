@@ -98,7 +98,7 @@ function showNotification(type: 'success' | 'error' | 'info', message: string, u
 }
 
 function createTray() {
-  const icon = nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.svg'))
+  const icon = nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.png'))
   tray = new Tray(icon)
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Open Settings', click: () => win?.show() },
