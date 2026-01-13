@@ -40,9 +40,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            release/*.exe
-            release/*.yml
-            release/*.blockmap
+            release/**/*.exe
+            release/**/*.yml
+            release/**/*.blockmap
           generate_release_notes: true  # 自动生成更新日志
           draft: false  # 直接发布，不保存为草稿
           prerelease: false  # 正式版本

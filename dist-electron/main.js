@@ -11,7 +11,6 @@ var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "
 var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 var _validator, _encryptionKey, _options, _defaultValues, _isInMigration, _watcher, _watchFile, _debouncedChangeHandler, _Conf_instances, prepareOptions_fn, setupValidator_fn, captureSchemaDefaults_fn, applyDefaultValues_fn, configureSerialization_fn, resolvePath_fn, initializeStore_fn, runMigrations_fn;
 import electron, { app as app$1, BrowserWindow, globalShortcut, ipcMain as ipcMain$1, shell as shell$1, nativeImage, Tray, Menu, clipboard, screen } from "electron";
-import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path$c from "node:path";
 import require$$0$5 from "fs";
@@ -27662,7 +27661,7 @@ Store$2.prototype.getAllCookies = function(cb) {
   throw new Error("getAllCookies is not implemented (therefore jar cannot be serialized)");
 };
 var memstore = {};
-var permuteDomain$1 = {};
+var permuteDomain$2 = {};
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -27693,32 +27692,26 @@ var permuteDomain$1 = {};
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-var hasRequiredPermuteDomain;
-function requirePermuteDomain() {
-  if (hasRequiredPermuteDomain) return permuteDomain$1;
-  hasRequiredPermuteDomain = 1;
-  var pubsuffix2 = pubsuffixPsl;
-  function permuteDomain2(domain) {
-    var pubSuf = pubsuffix2.getPublicSuffix(domain);
-    if (!pubSuf) {
-      return null;
-    }
-    if (pubSuf == domain) {
-      return [domain];
-    }
-    var prefix = domain.slice(0, -(pubSuf.length + 1));
-    var parts = prefix.split(".").reverse();
-    var cur = pubSuf;
-    var permutations = [cur];
-    while (parts.length) {
-      cur = parts.shift() + "." + cur;
-      permutations.push(cur);
-    }
-    return permutations;
+var pubsuffix$1 = pubsuffixPsl;
+function permuteDomain$1(domain) {
+  var pubSuf = pubsuffix$1.getPublicSuffix(domain);
+  if (!pubSuf) {
+    return null;
   }
-  permuteDomain$1.permuteDomain = permuteDomain2;
-  return permuteDomain$1;
+  if (pubSuf == domain) {
+    return [domain];
+  }
+  var prefix = domain.slice(0, -(pubSuf.length + 1));
+  var parts = prefix.split(".").reverse();
+  var cur = pubSuf;
+  var permutations = [cur];
+  while (parts.length) {
+    cur = parts.shift() + "." + cur;
+    permutations.push(cur);
+  }
+  return permutations;
 }
+permuteDomain$2.permuteDomain = permuteDomain$1;
 var pathMatch$3 = {};
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
@@ -27797,7 +27790,7 @@ pathMatch$3.pathMatch = pathMatch$2;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 var Store$1 = store$1.Store;
-var permuteDomain = requirePermuteDomain().permuteDomain;
+var permuteDomain = permuteDomain$2.permuteDomain;
 var pathMatch$1 = pathMatch$3.pathMatch;
 var util$6 = require$$1$2;
 function MemoryCookieStore$1() {
@@ -28945,7 +28938,7 @@ cookie.defaultPath = defaultPath;
 cookie.pathMatch = pathMatch;
 cookie.getPublicSuffix = pubsuffix.getPublicSuffix;
 cookie.cookieCompare = cookieCompare;
-cookie.permuteDomain = requirePermuteDomain().permuteDomain;
+cookie.permuteDomain = permuteDomain$2.permuteDomain;
 cookie.permutePath = permutePath;
 cookie.canonicalDomain = canonicalDomain;
 var tough = cookie;
@@ -69961,7 +69954,6 @@ const DEFAULT_SETTINGS = {
   autoCopy: true,
   copyFormat: "markdown"
 };
-createRequire(import.meta.url);
 const __dirname$1 = path$c.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path$c.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -69977,13 +69969,15 @@ function createWindow() {
     width: 1e3,
     height: 800,
     title: "PicUp",
-    icon: path$c.join(process.env.VITE_PUBLIC, "logo.svg"),
+    icon: path$c.join(process.env.VITE_PUBLIC, "logo.png"),
+    // Use png for window icon too
     webPreferences: {
       preload: path$c.join(__dirname$1, "preload.mjs"),
       webSecurity: false
       // Simplify local file access
     }
   });
+  win.setMenuBarVisibility(false);
   win.webContents.on("did-finish-load", () => {
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
   });
@@ -70001,17 +69995,17 @@ function createWindow() {
   });
 }
 let notificationWin = null;
-function showNotification(type2, message, url) {
+function showNotification(type2, message, url, detail) {
   if (notificationWin) {
     notificationWin.close();
     notificationWin = null;
   }
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   notificationWin = new BrowserWindow({
-    width: 350,
-    height: 120,
-    x: width - 370,
-    y: height - 140,
+    width: 320,
+    height: 80,
+    x: width - 340,
+    y: height - 100,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -70021,7 +70015,8 @@ function showNotification(type2, message, url) {
       preload: path$c.join(__dirname$1, "preload.mjs")
     }
   });
-  const notifyUrl = VITE_DEV_SERVER_URL ? `${VITE_DEV_SERVER_URL}#/notification?type=${type2}&message=${encodeURIComponent(message)}&url=${encodeURIComponent(url || "")}` : `file://${path$c.join(RENDERER_DIST, "index.html")}#/notification?type=${type2}&message=${encodeURIComponent(message)}&url=${encodeURIComponent(url || "")}`;
+  const currentLang = store.get("language") || "zh";
+  const notifyUrl = VITE_DEV_SERVER_URL ? `${VITE_DEV_SERVER_URL}#/notification?type=${type2}&message=${encodeURIComponent(message)}&url=${encodeURIComponent(url || "")}&detail=${encodeURIComponent("")}&lng=${currentLang}` : `file://${path$c.join(RENDERER_DIST, "index.html")}#/notification?type=${type2}&message=${encodeURIComponent(message)}&url=${encodeURIComponent(url || "")}&detail=${encodeURIComponent("")}&lng=${currentLang}`;
   notificationWin.loadURL(notifyUrl);
   setTimeout(() => {
     if (notificationWin && !notificationWin.isDestroyed()) {
@@ -70031,7 +70026,7 @@ function showNotification(type2, message, url) {
   }, 5e3);
 }
 function createTray() {
-  const icon = nativeImage.createFromPath(path$c.join(process.env.VITE_PUBLIC, "logo.svg"));
+  const icon = nativeImage.createFromPath(path$c.join(process.env.VITE_PUBLIC, "logo.png"));
   tray = new Tray(icon);
   const contextMenu = Menu.buildFromTemplate([
     { label: "Open Settings", click: () => win == null ? void 0 : win.show() },
@@ -70080,7 +70075,7 @@ async function uploadFileToCos(filePath, source2) {
   const currentId = store.get("currentConfigId");
   const config = settings.find((c) => c.id === currentId);
   if (!config) {
-    showNotification("error", "Please configure COS first!");
+    showNotification("error", "configure_cos_first");
     return;
   }
   const cos2 = getCosClient(config);
@@ -70130,7 +70125,29 @@ async function handleClipboardUpload() {
     await uploadFileToCos(tempPath, "clipboard");
     return;
   }
-  showNotification("error", "Clipboard is empty or not an image");
+  if (process.platform === "win32") {
+    const rawFilePath = clipboard.readBuffer("FileNameW").toString("ucs2").replace(new RegExp(String.fromCharCode(0), "g"), "");
+    if (rawFilePath && await fs$4.pathExists(rawFilePath)) {
+      const ext = path$c.extname(rawFilePath).toLowerCase();
+      if ([".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".svg"].includes(ext)) {
+        await uploadFileToCos(rawFilePath, "file");
+        return;
+      }
+    }
+  } else {
+    const fileUrl = clipboard.read("public.file-url");
+    if (fileUrl) {
+      const filePath = fileURLToPath(fileUrl);
+      if (filePath && await fs$4.pathExists(filePath)) {
+        const ext = path$c.extname(filePath).toLowerCase();
+        if ([".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".svg"].includes(ext)) {
+          await uploadFileToCos(filePath, "file");
+          return;
+        }
+      }
+    }
+  }
+  showNotification("error", "clipboard_empty");
 }
 app$1.on("window-all-closed", () => {
   if (process.platform !== "darwin") ;

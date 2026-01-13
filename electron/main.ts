@@ -27,7 +27,7 @@ function createWindow() {
     width: 1000,
     height: 800,
     title: 'PicUp',
-    icon: path.join(process.env.VITE_PUBLIC, 'logo.svg'),
+    icon: path.join(process.env.VITE_PUBLIC, 'logo.png'), // Use png for window icon too
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       webSecurity: false // Simplify local file access
@@ -59,7 +59,7 @@ function createWindow() {
 // Notification Window
 let notificationWin: BrowserWindow | null = null
 
-function showNotification(type: 'success' | 'error' | 'info', message: string, url?: string) {
+function showNotification(type: 'success' | 'error' | 'info', message: string, url?: string, detail?: string) {
   if (notificationWin) {
     notificationWin.close()
     notificationWin = null
@@ -68,10 +68,10 @@ function showNotification(type: 'success' | 'error' | 'info', message: string, u
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
   
   notificationWin = new BrowserWindow({
-    width: 350,
-    height: 120,
-    x: width - 370,
-    y: height - 140,
+    width: 320,
+    height: 80,
+    x: width - 340,
+    y: height - 100,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -82,9 +82,10 @@ function showNotification(type: 'success' | 'error' | 'info', message: string, u
     }
   })
 
+  const currentLang = store.get('language') || 'zh'
   const notifyUrl = VITE_DEV_SERVER_URL 
-    ? `${VITE_DEV_SERVER_URL}#/notification?type=${type}&message=${encodeURIComponent(message)}&url=${encodeURIComponent(url || '')}`
-    : `file://${path.join(RENDERER_DIST, 'index.html')}#/notification?type=${type}&message=${encodeURIComponent(message)}&url=${encodeURIComponent(url || '')}`
+    ? `${VITE_DEV_SERVER_URL}#/notification?type=${type}&message=${encodeURIComponent(message)}&url=${encodeURIComponent(url || '')}&detail=${encodeURIComponent(detail || '')}&lng=${currentLang}`
+    : `file://${path.join(RENDERER_DIST, 'index.html')}#/notification?type=${type}&message=${encodeURIComponent(message)}&url=${encodeURIComponent(url || '')}&detail=${encodeURIComponent(detail || '')}&lng=${currentLang}`
 
   notificationWin.loadURL(notifyUrl)
 
@@ -155,7 +156,7 @@ async function uploadFileToCos(filePath: string, source: 'clipboard' | 'file') {
   const config = settings.find(c => c.id === currentId)
 
   if (!config) {
-    showNotification('error', 'Please configure COS first!')
+    showNotification('error', 'configure_cos_first')
     return
   }
 
@@ -213,6 +214,7 @@ async function uploadFileToCos(filePath: string, source: 'clipboard' | 'file') {
 }
 
 async function handleClipboardUpload() {
+  // 1. Try to read image from clipboard
   const image = clipboard.readImage()
   if (!image.isEmpty()) {
     const buffer = image.toPNG()
@@ -222,14 +224,35 @@ async function handleClipboardUpload() {
     return
   }
 
-  // Try to read file paths from clipboard (if user copied a file)
-  // Electron does not have a direct way to read file paths from clipboard on all platforms easily in a standard way
-  // without using 'electron-clipboard-ex' or parsing buffer.
-  // However, on Windows, we can try to read 'FileNameW' but it returns a buffer of filename.
-  // For simplicity and stability without extra native deps, we focus on images.
-  // But we can add a check for text.
+  // 2. Try to read file paths from clipboard (for Windows/macOS file copy)
+  // On Windows, when copying a file, clipboard has 'FileNameW' format
+  // Electron's clipboard.readBuffer can read it.
+  if (process.platform === 'win32') {
+    const rawFilePath = clipboard.readBuffer('FileNameW').toString('ucs2').replace(new RegExp(String.fromCharCode(0), 'g'), '');
+    if (rawFilePath && await fs.pathExists(rawFilePath)) {
+       // Only allow images
+       const ext = path.extname(rawFilePath).toLowerCase();
+       if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg'].includes(ext)) {
+         await uploadFileToCos(rawFilePath, 'file');
+         return;
+       }
+    }
+  } else {
+    // macOS uses 'public.file-url'
+    const fileUrl = clipboard.read('public.file-url');
+    if (fileUrl) {
+       const filePath = fileURLToPath(fileUrl);
+       if (filePath && await fs.pathExists(filePath)) {
+          const ext = path.extname(filePath).toLowerCase();
+          if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg'].includes(ext)) {
+            await uploadFileToCos(filePath, 'file');
+            return;
+          }
+       }
+    }
+  }
   
-  showNotification('error', 'Clipboard is empty or not an image')
+  showNotification('error', 'clipboard_empty')
 }
 
 // App Events

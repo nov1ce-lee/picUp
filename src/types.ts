@@ -27,6 +27,7 @@ export interface AppSettings {
   };
   autoCopy: boolean; // Auto copy link after upload
   copyFormat: 'markdown' | 'url'; // Copy format
+  language: string; // 'zh' or 'en'
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -38,4 +39,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   autoCopy: true,
   copyFormat: 'markdown',
+  language: 'zh',
 };
