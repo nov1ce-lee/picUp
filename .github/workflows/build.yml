@@ -7,6 +7,9 @@ on:
       - 'v*'  # 推送 v 开头的标签时触发
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -46,4 +49,4 @@ jobs:
           draft: false  # 直接发布，不保存为草稿
           prerelease: false  # 正式版本
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
