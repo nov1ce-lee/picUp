@@ -2,6 +2,7 @@ import React from 'react';
 import { Upload, Button, Card } from 'antd';
 import { InboxOutlined, FileImageOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import type { UploadProps } from 'antd';
 
 const { Dragger } = Upload;
 
@@ -20,23 +21,25 @@ const UploadPage: React.FC = () => {
     }
   };
 
-  const props = {
+  const props: UploadProps = {
     name: 'file',
     multiple: true,
     showUploadList: false,
-    customRequest: async (options: any) => {
-      const { file, onSuccess, onError } = options;
+    customRequest: async (options) => {
+      const { file, onSuccess, onError } = options as Parameters<NonNullable<UploadProps['customRequest']>>[0];
       try {
         setLoading(true);
-        const filePath = (file as any).path;
+        const candidate = file as { path?: unknown };
+        const filePath = typeof candidate.path === 'string' ? candidate.path : undefined;
         if (filePath) {
           await window.picUp.uploadFiles([filePath]);
-          onSuccess("ok");
+          onSuccess?.('ok');
         } else {
-          onError(new Error("Cannot get file path"));
+          onError?.(new Error('Cannot get file path'));
         }
-      } catch (err: any) {
-        onError(err);
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        onError?.(error);
       } finally {
         setLoading(false);
       }

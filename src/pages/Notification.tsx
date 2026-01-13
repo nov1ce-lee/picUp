@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, CloseOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 
+type DragRegionStyle = React.CSSProperties & { WebkitAppRegion: 'drag' }
+
 const Notification: React.FC = () => {
   const { t, i18n } = useTranslation()
   const [searchParams] = useSearchParams()
@@ -32,6 +34,7 @@ const Notification: React.FC = () => {
   const borderColor = type === 'success' ? '#b7eb8f' : type === 'error' ? '#ffccc7' : '#91d5ff'
   const Icon = type === 'success' ? CheckCircleOutlined : type === 'error' ? CloseCircleOutlined : InfoCircleOutlined
   const iconColor = type === 'success' ? '#52c41a' : type === 'error' ? '#ff4d4f' : '#1890ff'
+  const dragRegionStyle: DragRegionStyle = { position: 'absolute', top: 0, left: 0, right: 0, height: '4px', WebkitAppRegion: 'drag' }
 
   return (
     <div style={{
@@ -76,7 +79,7 @@ const Notification: React.FC = () => {
       >
         <CloseOutlined />
       </div>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', WebkitAppRegion: 'drag' } as any} />
+      <div style={dragRegionStyle} />
     </div>
   )
 }

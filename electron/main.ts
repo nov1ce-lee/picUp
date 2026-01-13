@@ -123,6 +123,18 @@ function getCosClient(config: CosConfig) {
   })
 }
 
+function isErrorWithStatusCode(err: unknown): err is { statusCode: number } {
+  if (typeof err !== 'object' || err === null) return false
+  const candidate = err as { statusCode?: unknown }
+  return typeof candidate.statusCode === 'number'
+}
+
+function isErrorWithMessage(err: unknown): err is { message: string } {
+  if (typeof err !== 'object' || err === null) return false
+  const candidate = err as { message?: unknown }
+  return typeof candidate.message === 'string'
+}
+
 async function getUniqueFileName(cos: COS, bucket: string, region: string, key: string): Promise<string> {
   let finalKey = key
   let counter = 2
@@ -131,7 +143,7 @@ async function getUniqueFileName(cos: COS, bucket: string, region: string, key: 
   const dir = path.dirname(key)
   
   // Simple check loop
-  while (true) {
+  for (;;) {
     try {
       await cos.headObject({
         Bucket: bucket,
@@ -141,8 +153,8 @@ async function getUniqueFileName(cos: COS, bucket: string, region: string, key: 
       // If exists (no error), try next name
       finalKey = path.join(dir, `${name}(${counter})${ext}`).replace(/\\/g, '/')
       counter++
-    } catch (err: any) {
-      if (err.statusCode === 404) {
+    } catch (err: unknown) {
+      if (isErrorWithStatusCode(err) && err.statusCode === 404) {
         return finalKey
       }
       throw err
@@ -202,9 +214,9 @@ async function uploadFileToCos(filePath: string, source: 'clipboard' | 'file') {
     // Notify renderer to refresh history
     win?.webContents.send('history-updated')
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err)
-    showNotification('error', `Upload Failed: ${err.message}`)
+    showNotification('error', 'upload_failed', undefined, isErrorWithMessage(err) ? err.message : undefined)
   } finally {
     // If it was a temp file from clipboard, delete it
     if (source === 'clipboard') {
@@ -274,7 +286,7 @@ app.whenReady().then(() => {
   createTray()
 
   // Register Shortcut
-  const shortcuts = store.get('shortcuts') as any
+  const shortcuts = store.get('shortcuts')
   if (shortcuts?.uploadClipboard) {
     globalShortcut.register(shortcuts.uploadClipboard, () => {
       handleClipboardUpload()

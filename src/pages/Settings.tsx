@@ -56,7 +56,7 @@ const SettingsPage: React.FC = () => {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
-      let newConfigs = [...settings.cosConfigs];
+      const newConfigs = [...settings.cosConfigs];
       
       if (editingConfig) {
         const index = newConfigs.findIndex(c => c.id === editingConfig.id);

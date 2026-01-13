@@ -26,6 +26,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Sync app version with tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: node -e "const fs=require('fs');const p=require('./package.json');const v=(process.env.REF_NAME||'').replace(/^v/,'');if(!v){console.error('Missing tag ref_name');process.exit(1)};p.version=v;fs.writeFileSync('./package.json',JSON.stringify(p,null,2)+'\n');console.log('package.json version ->',v)"
+
       - name: Build
         run: npm run build
         env:

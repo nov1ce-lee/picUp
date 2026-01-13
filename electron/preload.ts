@@ -1,4 +1,5 @@
 import { ipcRenderer, contextBridge } from 'electron'
+import type { AppSettings } from '../src/types'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -22,7 +23,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
 contextBridge.exposeInMainWorld('picUp', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
-  saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
+  saveSettings: (settings: AppSettings) => ipcRenderer.invoke('save-settings', settings),
   uploadClipboard: () => ipcRenderer.invoke('upload-clipboard'),
   uploadFiles: (paths: string[]) => ipcRenderer.invoke('upload-files', paths),
   clearHistory: () => ipcRenderer.invoke('clear-history'),
