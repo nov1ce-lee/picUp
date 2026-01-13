@@ -197,7 +197,7 @@ async function uploadFileToCos(filePath: string, source: 'clipboard' | 'file') {
       clipboard.writeText(textToCopy)
     }
 
-    showNotification('success', 'Upload Successful!', url)
+    showNotification('success', 'upload_success', url)
     
     // Notify renderer to refresh history
     win?.webContents.send('history-updated')
